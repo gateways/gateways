@@ -1,5 +1,5 @@
 [submodule "shared"]
-	path = shared
+	path = _shared
 	url = https://github.com/gateways/shared.git
 	branch = gh-pages
 [submodule "eutro"]
