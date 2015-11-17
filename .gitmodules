@@ -1,0 +1,72 @@
+[submodule "shared"]
+	path = shared
+	url = https://github.com/gateways/shared.git
+	branch = gh-pages
+[submodule "eutro"]
+	path = eutro
+	url = https://github.com/gateways/eutro.git
+	branch = gh-pages
+[submodule "iforsk"]
+	path = iforsk
+	url = https://github.com/gateways/iforsk.git
+	branch = gh-pages
+[submodule "healthreg"]
+	path = healthreg
+	url = https://github.com/gateways/healthreg.git
+	branch = gh-pages
+[submodule "codebook"]
+	path = codebook
+	url = https://github.com/gateways/codebook.git
+	branch = gh-pages
+[submodule "kodebok"]
+	path = kodebok
+	url = https://github.com/gateways/kodebok.git
+	branch = gh-pages
+[submodule "kvrk"]
+	path = kvrk
+	url = https://github.com/gateways/kvrk.git
+	branch = gh-pages
+[submodule "variabler"]
+	path = variabler
+	url = https://github.com/gateways/variabler.git
+	branch = gh-pages
+[submodule "ontology"]
+	path = ontology
+	url = https://github.com/gateways/ontology.git
+	branch = gh-pages
+[submodule "forforskning"]
+	path = forforskning
+	url = https://github.com/gateways/forforskning.git
+	branch = gh-pages
+[submodule "forresearch"]
+	path = forresearch
+	url = https://github.com/gateways/forresearch.git
+	branch = gh-pages
+[submodule "ontologi"]
+	path = ontologi
+	url = https://github.com/gateways/ontologi.git
+	branch = gh-pages
+[submodule "taksonomi"]
+	path = taksonomi
+	url = https://github.com/gateways/taksonomi.git
+	branch = gh-pages
+[submodule "helsereg"]
+	path = helsereg
+	url = https://github.com/gateways/helsereg.git
+	branch = gh-pages
+[submodule "kodeverket"]
+	path = kodeverket
+	url = https://github.com/gateways/kodeverket.git
+	branch = gh-pages
+[submodule "repository"]
+	path = repository
+	url = https://github.com/gateways/repository.git
+	branch = gh-pages
+[submodule "taxonomy"]
+	path = taxonomy
+	url = https://github.com/gateways/taxonomy.git
+	branch = gh-pages
+[submodule "variables"]
+	path = variables
+	url = https://github.com/gateways/variables.git
+	branch = gh-pages
