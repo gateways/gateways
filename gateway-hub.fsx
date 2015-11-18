@@ -33,7 +33,7 @@ type gatewayroot =
 let gateways = 
     Directory.GetDirectories(relpath "") 
     |> Seq.map Path.GetFileNameWithoutExtension 
-    |> Seq.where (fun g -> not (String.IsNullOrWhiteSpace(g) || g.StartsWith(".") || g.StartsWith("_") ))  
+    |> Seq.where (fun g -> not (String.IsNullOrWhiteSpace(g) || g.StartsWith(".") || g.StartsWith("_")))  
     |> Seq.map (fun g -> { gateway.name = g } )
     |> Seq.toList
 
@@ -62,7 +62,10 @@ let gatewaypath gateway name = relpath
 let populate =
     for g in gateways do
         for ass in shared.assets do
-            File.Copy((pathto shared ass), (pathto g ass))
+            if ass = "CNAME" then
+                File.WriteAllLines((pathto shared ass), [ ass + ".no" ])
+            else
+                File.Copy((pathto shared ass), (pathto g ass))
         for antiass in shared.antiassets do
             File.Delete(pathto g antiass)
 
