@@ -46,6 +46,7 @@ let shared =
           "_layouts/default.html" 
           "_layouts/post.html"
           "_posts/" 
+          "blog/"
           "CNAME"
           "_config.yml"
           "index.md"
