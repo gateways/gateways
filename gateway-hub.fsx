@@ -7,6 +7,8 @@
 *)
 
 
+
+
 open System
 open System.IO
 
@@ -61,24 +63,21 @@ let gatewaypath gateway name = relpath
 
 let populate =
     for g in gateways do
+
         for ass in shared.assets do
             if ass = "CNAME" then
-                File.WriteAllLines((pathto shared ass), [ ass + ".no" ])
+                File.WriteAllLines((pathto g ass), [ g.name + ".no" ])
             else
-                File.Copy((pathto shared ass), (pathto g ass))
+                if ass.EndsWith("/") then
+                    Directory.CreateDirectory(pathto g ass) |> ignore
+                else
+                    let correctedText = File.ReadAllText(pathto shared ass).Replace(@"{%% gateway.name %%}", g.name)
+                    File.WriteAllText((pathto g ass), correctedText)
+
         for antiass in shared.antiassets do
             File.Delete(pathto g antiass)
 
-        printf "%s" g.name
-
-   
-// copy files, from -> to
-
-
-
-
-
-
+        printf "updated %s\r\n" g.name
 
 
 
