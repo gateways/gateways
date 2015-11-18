@@ -7,8 +7,11 @@
 *)
 
 
+#I "../datamunger/packages/FAKE.4.9.3/tools/"
+#r "../datamunger/packages/FAKE.4.9.3/tools/FakeLib.dll"
 
 
+open Fake
 open System
 open System.IO
 
@@ -76,11 +79,13 @@ let populate =
 
         for antiass in shared.antiassets do
             File.Delete(pathto g antiass)
+        
+        let repo = pathto g ""
 
-        printf "updated %s\r\n" g.name
+        Git.Staging.StageAll(repo)
+        Git.Commit.Commit repo "Gateway content population"
+        Git.Branches.pushBranch repo "origin" "gh-pages"
 
-
-
-
+        printf "updated %s\r\n, repo in %s\r\n" g.name repo
 
 
