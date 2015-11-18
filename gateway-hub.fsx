@@ -12,14 +12,22 @@ open System.IO
 
 let relpath path = Path.Combine(__SOURCE_DIRECTORY__, path)
 
-type File = string
+type FilePath = string
 
-type gateway = { name : string }
+type INamed = 
+  abstract Name : string
+
+type gateway = 
+    { name : string }
+    interface INamed with
+        member x.Name = x.name
 
 type gatewayroot = 
     { name : string 
-      assets : File list 
-      antiassets : File list }
+      assets : FilePath list 
+      antiassets : FilePath list }
+    interface INamed with
+        member x.Name = x.name
 
 let gateways = 
     Directory.GetDirectories(relpath "") 
@@ -42,16 +50,23 @@ let common =
           "params.json" ] 
       antiassets = [ "index.html" ] }
 
+let pathto (source:'a when 'a :> INamed) asset =
+    relpath source.Name + "/" + asset
+
+let commonpath name = relpath "common/" + name
+let gatewaypath gateway name = relpath
 
 
+let populate =
+    for g in gateways do
+        for ass in common.assets do
+            File.Copy((pathto common ass), (pathto g ass))
+        for antiass in common.antiassets do
+            File.Delete(pathto g antiass)
 
-
-
-
-
+        printf "%s" g.name
 
    
-//Seq.map (fun g -> { name = g; assets = [] } )
 // copy files, from -> to
 
 
