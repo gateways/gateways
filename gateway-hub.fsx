@@ -91,3 +91,5 @@ let populate =
         printf "updated %s\r\n, repo in %s\r\n" g.name repo
 
 
+        // refactor this into the content curator it was meant to be
+        s
