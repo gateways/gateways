@@ -15,12 +15,13 @@ open Fake
 open System
 open System.IO
 
+
 [<AutoOpen>]
 module Utility =
 
     let relpath path = Path.Combine(__SOURCE_DIRECTORY__, path)
 
-
+[<AutoOpen>]
 module Gateways =
 
     type FilePath = string
@@ -29,17 +30,17 @@ module Gateways =
         abstract path : string
         abstract relpath : string
 
-    type gateway = 
-        { root : FilePath }
-        interface IHaveAPath with
-            member x.path = x.root
-            member x.relpath = relpath x.root
-
     type gatewayroot = 
         { name : string 
           root : FilePath
           assets : FilePath list 
           antiassets : FilePath list }
+        interface IHaveAPath with
+            member x.path = x.root
+            member x.relpath = relpath x.root
+
+    type gateway = 
+        { root : FilePath }
         interface IHaveAPath with
             member x.path = x.root
             member x.relpath = relpath x.root
@@ -69,21 +70,15 @@ module Gateways =
           antiassets = [ "index.html" ] }
 
 
-
-
 module ContentCurator =
-
-    open Gateways
 
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
     let commonpath name = relpath "common/" + name
     let gatewaypath gateway name = relpath
-
     let stagenpush repo = 
         Git.Staging.StageAll(repo)
         Git.Commit.Commit repo "Gateway content population"
         Git.Branches.pushBranch repo "origin" "gh-pages"
-
     let publish (g:gateway) =
         let repo = pathto g ""
         stagenpush repo
@@ -91,16 +86,18 @@ module ContentCurator =
      
     module internal Asset =
 
-        let cname (g:gateway) (ass:FilePath) = File.WriteAllLines((pathto g ass), [ g.root + ".no" ])
-        let mkdir (g:gateway) (ass:FilePath) = Directory.CreateDirectory(pathto g ass) |> ignore
-        let pass  (g:gateway) (ass:FilePath) =
-            let correctedText = File.ReadAllText(pathto shared ass).Replace(@"{%% gateway.name %%}", g.root)
-            File.WriteAllText((pathto g ass), correctedText)
+        let ensure (g:gateway, ass:FilePath) = 
 
-        let (|Cname|_|) (g, ass) = if ass = "CNAME" then Some ass else None
-        let (|IsDir|_|) (g, ass:FilePath) = if ass.EndsWith("/") then Some ass else None
+            let cname g ass = File.WriteAllLines((pathto g ass), [ g.root + ".no" ])
+            let mkdir g ass = Directory.CreateDirectory(pathto g ass) |> ignore
+            let pass  g ass =
+                let correctedText = File.ReadAllText(pathto shared ass).Replace(@"{%% gateway.name %%}", g.root)
+                File.WriteAllText((pathto g ass), correctedText)
 
-        let ensure (g:gateway, ass:FilePath) = function
+            let (|Cname|_|) (g, ass) = if ass = "CNAME" then Some ass else None
+            let (|IsDir|_|) (g, ass) = if (ass:FilePath).EndsWith("/") then Some ass else None
+
+            function
             | Cname a -> cname g ass
             | IsDir a -> mkdir g ass
             | _ ->       pass  g ass
@@ -117,7 +114,4 @@ module ContentCurator =
         shared.antiassets |> delete
         publish g
 
-
     let populate = gateways |> List.map populategateway
-
-
