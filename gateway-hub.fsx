@@ -19,6 +19,7 @@ open System.IO
 [<AutoOpen>]
 module Utility =
 
+    let check = function | true -> Some () | _ -> None
     let relpath path = Path.Combine(__SOURCE_DIRECTORY__, path)
 
 [<AutoOpen>]
@@ -94,12 +95,12 @@ module ContentCurator =
                 let correctedText = File.ReadAllText(pathto shared ass).Replace(@"{%% gateway.name %%}", g.root)
                 File.WriteAllText((pathto g ass), correctedText)
 
-            let (|Cname|_|) (g, ass) = if ass = "CNAME" then Some ass else None
-            let (|IsDir|_|) (g, ass) = if (ass:FilePath).EndsWith("/") then Some ass else None
+            let (|Cname|_|) (g, ass) = check (ass = "CNAME")
+            let (|IsDir|_|) (g, ass) = check ((ass:FilePath).EndsWith("/"))
 
             function
-            | Cname a -> cname g ass
-            | IsDir a -> mkdir g ass
+            | Cname -> cname g ass
+            | IsDir -> mkdir g ass
             | _ ->       pass  g ass
 
         let delete (g:gateway, antiass:FilePath) = File.Delete(pathto g antiass)
