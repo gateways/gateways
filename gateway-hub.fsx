@@ -99,8 +99,7 @@ module Gateways =
           SourceRoot = Source "www.example.com/source"
           ContentSources = [ ] }
 
-
-    module private Registers = 
+    module internal Sites = 
 
         let Eutro = { EmptyGateway with Title = "Eutro" }
 
@@ -115,15 +114,19 @@ module Gateways =
         let variables = { EmptyGateway with Title = "variables" }
 
         let Kodeverket = { EmptyGateway with Title = "Kodeverket" }
-        let kvrk = { EmptyGateway with Title = "kvrk" }
-        let kodebok = { EmptyGateway with Title = "Eutro" }
-        let codebook = { EmptyGateway with Title = "Eutro" }
-
-        let Repository = { EmptyGateway with Title = "Eutro" }
-        let Taxonomy = { EmptyGateway with Title = "Eutro" }
-        let Taksonomi = { EmptyGateway with Title = "Eutro" }
-        let Ontologi = { EmptyGateway with Title = "Eutro" }
-        let Ontology = { EmptyGateway with Title = "Eutro" }
+        let kodebok = { EmptyGateway with Title = "kodebok" }
+        let codebook = { EmptyGateway with Title = "codebook" }
+        let kvrk = 
+            { EmptyGateway with 
+                Title = "kvrk" 
+                Sections = [ "Diagnosis"; "Procedure"; "Prescription" ]
+                Design = "oppslag" }
+        
+        let Repository = { EmptyGateway with Title = "Repsitory" }
+        let Taxonomy = { EmptyGateway with Title = "Taxonomy" }
+        let Taksonomi = { EmptyGateway with Title = "Taksonomi" }
+        let Ontologi = { EmptyGateway with Title = "Ontologi" }
+        let Ontology = { EmptyGateway with Title = "Ontology" }
 
         let all = 
             [ Eutro 
@@ -146,11 +149,13 @@ module Gateways =
               Ontology
             ]
 
-    let register = [ Registers.all ]
+    let sites = Sites.all
 
 
 
 module ContentCurator =
+
+    open Gateways
 
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
     let commonpath name = relpath "common/" + name
@@ -163,7 +168,24 @@ module ContentCurator =
         let repo = pathto g ""
         stagenpush repo
         printf "updated %s\r\n, repo in %s\r\n" g.root repo
-     
+    
+    
+    
+    // todo: create a filler function that examines all the registries, looks at their design folders, and coied default.html and post.html (with the section name), and puts them in the root folder
+    //        No intelligence, perfect overrides from child sites
+    let empty = Set.ofList [ "About" ]
+    let folder = (fun sects (d, gateways) -> Set.union sects (Set.ofList [ for g in (gateways:Gateway list) do yield! g.Sections ]))
+    let prepDesigns =
+        let designs = 
+            Gateways.sites 
+            |> Seq.groupBy (fun g -> g.Design)
+            |> Seq.fold folder empty    
+
+             
+               // select a list of designs and a superset of their sections, ensure their content and then populate based on design
+        ()
+
+
     module internal Asset =
 
         let ensure (g:site, ass:FilePath) = 
