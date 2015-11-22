@@ -100,23 +100,53 @@ module Gateways =
           ContentSources = [ ] }
 
 
-    module private Register = 
+    module private Registers = 
 
         let Eutro = { EmptyGateway with Title = "Eutro" }
 
-        let Iforsk = { EmptyGateway with Title = "Eutro" }
-        let Forforskning = { EmptyGateway with Title = "Eutro" }
-        let Forresearch = { EmptyGateway with Title = "Eutro" }
+        let iforsk = { EmptyGateway with Title = "iforsk" }
+        let forforskning = { EmptyGateway with Title = "forforskning" }
+        let forresearch = { EmptyGateway with Title = "forresearch" }
 
-        let Helsereg = { EmptyGateway with Title = "Eutro" }
-        let Healthreg = { EmptyGateway with Title = "Eutro" }
+        let Helseregistre = { EmptyGateway with Title = "Helseregistre" }
+        let Helsereg = { EmptyGateway with Title = "Helsereg" }
+        let Healthreg = { EmptyGateway with Title = "Healthreg" }
+        let variabler = { EmptyGateway with Title = "variabler" }
+        let variables = { EmptyGateway with Title = "variables" }
 
-        let Healthreg = { EmptyGateway with Title = "Eutro" }
+        let Kodeverket = { EmptyGateway with Title = "Kodeverket" }
+        let kvrk = { EmptyGateway with Title = "kvrk" }
+        let kodebok = { EmptyGateway with Title = "Eutro" }
+        let codebook = { EmptyGateway with Title = "Eutro" }
 
-        let all = [ Eutro ]
+        let Repository = { EmptyGateway with Title = "Eutro" }
+        let Taxonomy = { EmptyGateway with Title = "Eutro" }
+        let Taksonomi = { EmptyGateway with Title = "Eutro" }
+        let Ontologi = { EmptyGateway with Title = "Eutro" }
+        let Ontology = { EmptyGateway with Title = "Eutro" }
 
+        let all = 
+            [ Eutro 
+              iforsk
+              forforskning
+              forresearch
+              Helseregistre
+              Helsereg
+              Healthreg
+              variabler
+              variables
+              Kodeverket
+              kvrk
+              kodebok
+              codebook
+              Repository
+              Taxonomy
+              Taksonomi
+              Ontologi
+              Ontology
+            ]
 
-    let register = [ Register.all ]
+    let register = [ Registers.all ]
 
 
 
