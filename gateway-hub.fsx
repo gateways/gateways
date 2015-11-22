@@ -27,70 +27,70 @@ module GatewayBase =
 
     type FilePath = string
 
-    type IHaveAPath = 
+    type IHaveAPath =
         abstract path : string
         abstract relpath : string
 
-    type root = 
-        { name : string 
+    type root =
+        { name : string
           root : FilePath
-          assets : FilePath list 
+          assets : FilePath list
           antiassets : FilePath list }
         interface IHaveAPath with
             member x.path = x.root
             member x.relpath = relpath x.root
 
-    type site = 
+    type site =
         { root : FilePath }
         interface IHaveAPath with
             member x.path = x.root
             member x.relpath = relpath x.root
 
-    let gateways = 
-        Directory.GetDirectories(relpath "") 
-        |> Seq.map Path.GetFileNameWithoutExtension 
-        |> Seq.where (fun g -> not (String.IsNullOrWhiteSpace(g) || g.StartsWith(".") || g.StartsWith("_")))  
+    let gateways =
+        Directory.GetDirectories(relpath "")
+        |> Seq.map Path.GetFileNameWithoutExtension
+        |> Seq.where (fun g -> not (String.IsNullOrWhiteSpace(g) || g.StartsWith(".") || g.StartsWith("_")))
         |> Seq.map (fun g -> { site.root = g } )
         |> Seq.toList
 
-    let shared = 
+    let shared =
         { name = "shared"
           root = "_shared"
-          assets = 
+          assets =
             [ "_layouts/"
-              "_layouts/default.html" 
+              "_layouts/default.html"
               "_layouts/post.html"
-              "_posts/" 
-              "_posts/2015-11-15-initial.md" 
+              "_posts/"
+              "_posts/2015-11-15-initial.md"
               "blog/"
               "blog/index.html"
               "CNAME"
               "_config.yml"
               "index.md"
-              "params.json" ] 
+              "params.json" ]
           antiassets = [ "index.html" ] }
 
 
 
 module Gateways =
 
-    type SocialMedia = 
-        | Twitter of string 
-        | Facebook of string 
+    type SocialMedia =
+        | Twitter of string
+        | Facebook of string
         | GooglePlus of string
 
     type Source = Source of string
 
-    type Gateway = 
-        { Title : string 
+    type Gateway =
+        { Title : string
           Sections : string list
           Design : string
-          Social : SocialMedia list 
-          Root : Source 
+          Social : SocialMedia list
+          Root : Source
           SourceRoot : Source
           ContentSources : Source list }
 
-    let EmptyGateway = 
+    let EmptyGateway =
         { Title = "[Empty]"
           Sections = [ ]
           Design = "none"
@@ -99,7 +99,7 @@ module Gateways =
           SourceRoot = Source "www.example.com/source"
           ContentSources = [ ] }
 
-    module internal Sites = 
+    module internal Sites =
 
         let Eutro = { EmptyGateway with Title = "Eutro" }
 
@@ -116,20 +116,20 @@ module Gateways =
         let Kodeverket = { EmptyGateway with Title = "Kodeverket" }
         let kodebok = { EmptyGateway with Title = "kodebok" }
         let codebook = { EmptyGateway with Title = "codebook" }
-        let kvrk = 
-            { EmptyGateway with 
-                Title = "kvrk" 
-                Sections = [ "Diagnosis"; "Procedure"; "Prescription" ]
+        let kvrk =
+            { EmptyGateway with
+                Title = "kvrk"
+                Sections = [ "Diagnosis"; "Procedure"; "Prescription" ]  //todo: "news/major" "news/minor" "news/whaaaa"
                 Design = "oppslag" }
-        
+
         let Repository = { EmptyGateway with Title = "Repsitory" }
         let Taxonomy = { EmptyGateway with Title = "Taxonomy" }
         let Taksonomi = { EmptyGateway with Title = "Taksonomi" }
         let Ontologi = { EmptyGateway with Title = "Ontologi" }
         let Ontology = { EmptyGateway with Title = "Ontology" }
 
-        let all = 
-            [ Eutro 
+        let all =
+            [ Eutro
               iforsk
               forforskning
               forresearch
@@ -160,7 +160,7 @@ module ContentCurator =
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
     let commonpath name = relpath "common/" + name
     let gatewaypath gateway name = relpath
-    let stagenpush repo = 
+    let stagenpush repo =
         Git.Staging.StageAll(repo)
         Git.Commit.Commit repo "Gateway content population"
         Git.Branches.pushBranch repo "origin" "gh-pages"
@@ -168,27 +168,30 @@ module ContentCurator =
         let repo = pathto g ""
         stagenpush repo
         printf "updated %s\r\n, repo in %s\r\n" g.root repo
-    
-    
-    
-    // todo: create a filler function that examines all the registries, looks at their design folders, and coied default.html and post.html (with the section name), and puts them in the root folder
+
+
+
+    // todo: create a filler function that examines all the registries, looks at their design folders, and copied default.html and post.html (with the section name), and puts them in the root folder
     //        No intelligence, perfect overrides from child sites
     let empty = Set.ofList [ "About" ]
-    let folder = (fun sects (d, gateways) -> Set.union sects (Set.ofList [ for g in (gateways:Gateway list) do yield! g.Sections ]))
+    let joinsections acc (d, gateways) = 
+        let allsections = [ for g in (gateways:Gateway list) do yield! g.Sections ]
+        Set.union acc (Set.ofList allsections)
+    let aggregateDesigns =
+            Gateways.sites
+            |> List.groupBy (fun g -> g.Design)
+            |> List.fold joinsections empty
+            |> Set.toList
+
     let prepDesigns =
-        let designs = 
-            Gateways.sites 
-            |> Seq.groupBy (fun g -> g.Design)
-            |> Seq.fold folder empty    
-
-             
-               // select a list of designs and a superset of their sections, ensure their content and then populate based on design
+        let designs = aggregateDesigns
         ()
-
-
+            //|> Seq.map (fun d -> printf ". . .%s\r\n" d)
+               // select a list of designs and a superset of their sections, ensure their content and then populate based on design
+ 
     module internal Asset =
 
-        let ensure (g:site, ass:FilePath) = 
+        let ensure (g:site, ass:FilePath) =
 
             let cname g ass = File.WriteAllLines((pathto g ass), [ g.root + ".no" ])
             let mkdir g ass = Directory.CreateDirectory(pathto g ass) |> ignore
@@ -217,3 +220,6 @@ module ContentCurator =
         publish g
 
     let populate = gateways |> List.map populategateway
+
+
+ContentCurator.prepDesigns
