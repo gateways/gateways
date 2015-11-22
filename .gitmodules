@@ -70,3 +70,6 @@
 	path = variables
 	url = https://github.com/gateways/variables.git
 	branch = gh-pages
+[submodule "helseregistre"]
+	path = helseregistre
+	url = https://github.com/gateways/helseregistre.git

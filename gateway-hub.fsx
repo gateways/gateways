@@ -23,7 +23,7 @@ module Utility =
     let relpath path = Path.Combine(__SOURCE_DIRECTORY__, path)
 
 [<AutoOpen>]
-module Gateways =
+module GatewayBase =
 
     type FilePath = string
 
@@ -31,7 +31,7 @@ module Gateways =
         abstract path : string
         abstract relpath : string
 
-    type gatewayroot = 
+    type root = 
         { name : string 
           root : FilePath
           assets : FilePath list 
@@ -40,7 +40,7 @@ module Gateways =
             member x.path = x.root
             member x.relpath = relpath x.root
 
-    type gateway = 
+    type site = 
         { root : FilePath }
         interface IHaveAPath with
             member x.path = x.root
@@ -50,7 +50,7 @@ module Gateways =
         Directory.GetDirectories(relpath "") 
         |> Seq.map Path.GetFileNameWithoutExtension 
         |> Seq.where (fun g -> not (String.IsNullOrWhiteSpace(g) || g.StartsWith(".") || g.StartsWith("_")))  
-        |> Seq.map (fun g -> { gateway.root = g } )
+        |> Seq.map (fun g -> { site.root = g } )
         |> Seq.toList
 
     let shared = 
@@ -71,6 +71,55 @@ module Gateways =
           antiassets = [ "index.html" ] }
 
 
+
+module Gateways =
+
+    type SocialMedia = 
+        | Twitter of string 
+        | Facebook of string 
+        | GooglePlus of string
+
+    type Source = Source of string
+
+    type Gateway = 
+        { Title : string 
+          Sections : string list
+          Design : string
+          Social : SocialMedia list 
+          Root : Source 
+          SourceRoot : Source
+          ContentSources : Source list }
+
+    let EmptyGateway = 
+        { Title = "[Empty]"
+          Sections = [ ]
+          Design = "none"
+          Social = [ ]
+          Root = Source "www.example.com/new"
+          SourceRoot = Source "www.example.com/source"
+          ContentSources = [ ] }
+
+
+    module private Register = 
+
+        let Eutro = { EmptyGateway with Title = "Eutro" }
+
+        let Iforsk = { EmptyGateway with Title = "Eutro" }
+        let Forforskning = { EmptyGateway with Title = "Eutro" }
+        let Forresearch = { EmptyGateway with Title = "Eutro" }
+
+        let Helsereg = { EmptyGateway with Title = "Eutro" }
+        let Healthreg = { EmptyGateway with Title = "Eutro" }
+
+        let Healthreg = { EmptyGateway with Title = "Eutro" }
+
+        let all = [ Eutro ]
+
+
+    let register = [ Register.all ]
+
+
+
 module ContentCurator =
 
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
@@ -80,14 +129,14 @@ module ContentCurator =
         Git.Staging.StageAll(repo)
         Git.Commit.Commit repo "Gateway content population"
         Git.Branches.pushBranch repo "origin" "gh-pages"
-    let publish (g:gateway) =
+    let publish (g:site) =
         let repo = pathto g ""
         stagenpush repo
         printf "updated %s\r\n, repo in %s\r\n" g.root repo
      
     module internal Asset =
 
-        let ensure (g:gateway, ass:FilePath) = 
+        let ensure (g:site, ass:FilePath) = 
 
             let cname g ass = File.WriteAllLines((pathto g ass), [ g.root + ".no" ])
             let mkdir g ass = Directory.CreateDirectory(pathto g ass) |> ignore
@@ -103,9 +152,9 @@ module ContentCurator =
             | IsDir -> mkdir g ass
             | _ ->       pass  g ass
 
-        let delete (g:gateway, antiass:FilePath) = File.Delete(pathto g antiass)
+        let delete (g:site, antiass:FilePath) = File.Delete(pathto g antiass)
 
-    let populategateway (g:gateway) =
+    let populategateway (g:site) =
 
         let withgateway assets = assets |> List.map (fun a -> g,a)
         let ensure assets = assets |> withgateway |> List.map Asset.ensure |> ignore
