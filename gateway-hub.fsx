@@ -158,7 +158,7 @@ module ContentCurator =
     open Gateways
 
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
-    let commonpath name = relpath "common/" + name
+    //let commonpath name = relpath "common/" + name
     let gatewaypath gateway name = relpath
     let stagenpush repo =
         Git.Staging.StageAll(repo)
@@ -171,23 +171,50 @@ module ContentCurator =
 
 
 
-    // todo: create a filler function that examines all the registries, looks at their design folders, and copied default.html and post.html (with the section name), and puts them in the root folder
+    // todo: create a filler function that examines all the sites, looks at their design folders, and copied default.html and post.html (with the section name), and puts them in the root folder
+    //        These get propogated to child sites if they are missing
     //        No intelligence, perfect overrides from child sites
     let empty = Set.ofList [ "About" ]
     let joinsections acc (d, gateways) = 
         let allsections = [ for g in (gateways:Gateway list) do yield! g.Sections ]
         Set.union acc (Set.ofList allsections)
-    let aggregateDesigns =
-            Gateways.sites
-            |> List.groupBy (fun g -> g.Design)
-            |> List.fold joinsections empty
-            |> Set.toList
+    let designs = 
+        Gateways.sites
+        |> List.groupBy (fun g -> g.Design)
+    let aggregateSections =
+        designs
+        |> List.fold joinsections empty
+        |> Set.toList
+
+
+    let ensureDirectory path = Directory.CreateDirectory(path)
 
     let prepDesigns =
-        let designs = aggregateDesigns
+        //let designs = aggregateDesigns
+
+        let root = relpath shared.root + "/_layouts/"
+        for design, gateways in designs do
+            let designFolder = root + design.ToLower() + "/"
+            ensureDirectory (designFolder) |> ignore
+            File.Copy(root + "default.html", designFolder + "default.html")
+            File.Copy(root + "post.html", designFolder + "post.html")
+
+
+
+        // for each design create folder in _layout
+            // for each section copy default and post
+       
+
+       // for each site....
+
+        // create root items if they dont exist - layout files...
+
+        // blast through the sites, check and populate 
         ()
-            //|> Seq.map (fun d -> printf ". . .%s\r\n" d)
-               // select a list of designs and a superset of their sections, ensure their content and then populate based on design
+
+        //|> Seq.map (fun d -> printf ". . .%s\r\n" d)
+        // select a list of designs and a superset of their sections, ensure their content and then populate 
+        // based on design (make folder and templates)
  
     module internal Asset =
 
@@ -205,7 +232,7 @@ module ContentCurator =
             function
             | Cname -> cname g ass
             | IsDir -> mkdir g ass
-            | _ ->       pass  g ass
+            | _ ->     pass  g ass
 
         let delete (g:site, antiass:FilePath) = File.Delete(pathto g antiass)
 
@@ -219,7 +246,9 @@ module ContentCurator =
         shared.antiassets |> delete
         publish g
 
-    let populate = gateways |> List.map populategateway
+    let populate = 
+        // ensure designs
+        gateways |> List.map populategateway
 
 
 ContentCurator.prepDesigns
