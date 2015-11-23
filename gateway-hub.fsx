@@ -60,6 +60,7 @@ module GatewayBase =
             [ "_layouts/"
               "_layouts/default.html"
               "_layouts/post.html"
+              "_layouts/index.html"
               "_posts/"
               "_posts/2015-11-15-initial.md"
               "blog/"
@@ -171,15 +172,10 @@ module ContentCurator =
 
     module private StructuralValidation = 
 
-        let empty = Set.ofList [ "About" ]
-        let designs = 
-            Gateways.sites
-            |> List.groupBy (fun g -> g.Design)
-
         let ensureDirectory path = Directory.CreateDirectory(path) |> ignore
         let safeCopy from to' = if not (File.Exists(to')) then File.Copy(from, to')
-
         let sharedroot = relpath shared.root
+        let designs = Gateways.sites |> List.groupBy (fun g -> g.Design)
 
         let ensureLayouts = 
             let root = sharedroot + "/_layouts/"
@@ -189,13 +185,21 @@ module ContentCurator =
                 safeCopy (root + "default.html") (designFolder + "default.html")
                 safeCopy (root + "post.html") (designFolder + "post.html")
 
+        let pass source target section =
+            let correctedText = File.ReadAllText(source).Replace(@"{%% site.section %%}", section )
+            File.WriteAllText(target, correctedText)
+
         let ensureSections =
             for site in Gateways.sites do 
                 let root = relpath site.Title + "/"
                 for section in site.Sections do
-                    let section = root + section.ToLower() + "/"
-                    ensureDirectory (section) 
-                    safeCopy (sharedroot + @"/blog/index.html") (section + "index.html")
+                    let sectionpath = root + section.ToLower() + "/"
+                    ensureDirectory (sectionpath) 
+                    ensureDirectory (sectionpath + "_posts/") 
+
+                    let sectionIndex = sectionpath +  "index.md"
+                    if not (File.Exists(sectionIndex)) then
+                        pass (sharedroot + @"/section/index.md") sectionIndex section
 
 
     let ensureDesigns () =
@@ -236,6 +240,8 @@ module ContentCurator =
     let populate () = 
         ensureDesigns ()
         gateways |> List.map populategateway
+
+    let publishall () = gateways |> List.map publish
 
 
 ContentCurator.ensureDesigns ()
