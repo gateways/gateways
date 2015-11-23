@@ -158,7 +158,6 @@ module ContentCurator =
     open Gateways
 
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
-    //let commonpath name = relpath "common/" + name
     let gatewaypath gateway name = relpath
     let stagenpush repo =
         Git.Staging.StageAll(repo)
@@ -170,51 +169,47 @@ module ContentCurator =
         printf "updated %s\r\n, repo in %s\r\n" g.root repo
 
 
+    module private StructuralValidation = 
 
-    // todo: create a filler function that examines all the sites, looks at their design folders, and copied default.html and post.html (with the section name), and puts them in the root folder
-    //        These get propogated to child sites if they are missing
-    //        No intelligence, perfect overrides from child sites
-    let empty = Set.ofList [ "About" ]
-    let joinsections acc (d, gateways) = 
-        let allsections = [ for g in (gateways:Gateway list) do yield! g.Sections ]
-        Set.union acc (Set.ofList allsections)
-    let designs = 
-        Gateways.sites
-        |> List.groupBy (fun g -> g.Design)
-    let aggregateSections =
-        designs
-        |> List.fold joinsections empty
-        |> Set.toList
+        let empty = Set.ofList [ "About" ]
+        let joinsections acc (d, gateways) = 
+            let allsections = [ for g in (gateways:Gateway list) do yield! g.Sections ]
+            Set.union acc (Set.ofList allsections)
+        let designs = 
+            Gateways.sites
+            |> List.groupBy (fun g -> g.Design)
+        let aggregateSections =
+            designs
+            |> List.fold joinsections empty
+            |> Set.toList
 
 
-    let ensureDirectory path = Directory.CreateDirectory(path)
+        let ensureDirectory path = Directory.CreateDirectory(path) |> ignore
+        let safeCopy from to' = if not (File.Exists(to')) then File.Copy(from, to')
 
-    let prepDesigns =
-        //let designs = aggregateDesigns
+        let sharedroot = relpath shared.root
 
-        let root = relpath shared.root + "/_layouts/"
-        for design, gateways in designs do
-            let designFolder = root + design.ToLower() + "/"
-            ensureDirectory (designFolder) |> ignore
-            File.Copy(root + "default.html", designFolder + "default.html")
-            File.Copy(root + "post.html", designFolder + "post.html")
+        let ensureLayouts = 
+            let root = sharedroot + "/_layouts/"
+            for design, gateways in designs do
+                let designFolder = root + design.ToLower() + "/"
+                ensureDirectory (designFolder)
+                safeCopy (root + "default.html") (designFolder + "default.html")
+                safeCopy (root + "post.html") (designFolder + "post.html")
+
+        let ensureSections =
+            for site in Gateways.sites do 
+                let root = relpath site.Title + "/"
+                for section in site.Sections do
+                    let section = root + section.ToLower() + "/"
+                    ensureDirectory (section) 
+                    safeCopy (sharedroot + @"/blog/index.html") (section + "index.html")
 
 
+    let ensureDesigns () =
+        StructuralValidation.ensureLayouts
+        StructuralValidation.ensureSections
 
-        // for each design create folder in _layout
-            // for each section copy default and post
-       
-
-       // for each site....
-
-        // create root items if they dont exist - layout files...
-
-        // blast through the sites, check and populate 
-        ()
-
-        //|> Seq.map (fun d -> printf ". . .%s\r\n" d)
-        // select a list of designs and a superset of their sections, ensure their content and then populate 
-        // based on design (make folder and templates)
  
     module internal Asset =
 
@@ -239,16 +234,16 @@ module ContentCurator =
     let populategateway (g:site) =
 
         let withgateway assets = assets |> List.map (fun a -> g,a)
-        let ensure assets = assets |> withgateway |> List.map Asset.ensure |> ignore
         let delete assets = assets |> withgateway |> List.map Asset.delete |> ignore
+        let ensure assets = assets |> withgateway |> List.map Asset.ensure |> ignore
 
-        shared.assets     |> ensure
         shared.antiassets |> delete
+        shared.assets     |> ensure
         publish g
 
-    let populate = 
-        // ensure designs
+    let populate () = 
+        ensureDesigns ()
         gateways |> List.map populategateway
 
 
-ContentCurator.prepDesigns
+ContentCurator.ensureDesigns ()
