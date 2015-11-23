@@ -172,17 +172,9 @@ module ContentCurator =
     module private StructuralValidation = 
 
         let empty = Set.ofList [ "About" ]
-        let joinsections acc (d, gateways) = 
-            let allsections = [ for g in (gateways:Gateway list) do yield! g.Sections ]
-            Set.union acc (Set.ofList allsections)
         let designs = 
             Gateways.sites
             |> List.groupBy (fun g -> g.Design)
-        let aggregateSections =
-            designs
-            |> List.fold joinsections empty
-            |> Set.toList
-
 
         let ensureDirectory path = Directory.CreateDirectory(path) |> ignore
         let safeCopy from to' = if not (File.Exists(to')) then File.Copy(from, to')
