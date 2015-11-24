@@ -182,7 +182,7 @@ module Gateways =
 
         let Repository =
             { EmptyGateway with
-                Title = "Repsitory"
+                Title = "Repository"
                 Sections = [ "Directory"; ]
                 Design = "catalogue" }
 
@@ -273,7 +273,7 @@ module ContentCurator =
 
         let ensureSections () =
             for site in Gateways.sites do
-                let root = relpath site.Title + "/"
+                let root = relpath (site.Title.ToLower()) + "/"
                 for section in site.Sections do
 
                     let sectionPage = root + section.ToLower() + ".md"
