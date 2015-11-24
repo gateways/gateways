@@ -241,13 +241,17 @@ module ContentCurator =
     open Gateways
 
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
+    let repository (g:site) = pathto g ""
     let gatewaypath gateway name = relpath
-    let stagenpush repo =
+    let stagencommit repo message =
         Git.Staging.StageAll(repo)
-        Git.Commit.Commit repo "Gateway content population"
-        Git.Branches.pushBranch repo "origin" "gh-pages"
+        Git.Commit.Commit repo message
+    let commit (g:site) = stagencommit (g |> repository) "Automatic submodule commit"
+    let stagenpush repo =
+        stagencommit repo "Gateway content population"
+        Git.Branches.pushBranch repo "origin" "gh-pages"    
     let publish (g:site) =
-        let repo = pathto g ""
+        let repo = g |> repository
         stagenpush repo
         printf "updated %s\r\n, repo in %s\r\n" g.root repo
 
@@ -328,9 +332,12 @@ module ContentCurator =
         ensureDesigns ()
         gateways |> List.map populateSite
 
+    let commitAll  () = gateways |> List.map commit
     let publishAll () = gateways |> List.map publish
 
 
+
 ContentCurator.ensureDesigns ()
+ContentCurator.commitAll ()
 ContentCurator.populate ()
 ContentCurator.publishAll ()
