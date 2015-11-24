@@ -195,13 +195,13 @@ module ContentCurator =
                 for section in site.Sections do
                     let sectionpath = root + section.ToLower() + "/"
                     ensureDirectory (sectionpath) 
-                    ensureDirectory (sectionpath + "_posts/") 
+                    //ensureDirectory (sectionpath + "_posts/") 
 
-                    let sectionIndex = sectionpath +  "index.md"
+                    let sectionIndex = sectionpath +  "index.html"
                     if not (File.Exists(sectionIndex)) then
-                        pass (sharedroot + @"/section/index.md") sectionIndex section
+                        pass (sharedroot + @"/section/index.html") sectionIndex section
 
-
+                        //https://github.com/raphinou/jekyll-base/blob/gh-pages/_layouts/index.html
     let ensureDesigns () =
         StructuralValidation.ensureLayouts
         StructuralValidation.ensureSections
