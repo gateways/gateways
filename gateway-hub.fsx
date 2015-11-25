@@ -67,8 +67,9 @@ module GatewayBase =
               "blog/index.html"
               "CNAME"
               "_config.yml"
-              "index.md"
-              "params.json" ]
+              "params.json"
+              "about.md"
+              "index.md" ]
           antiassets = [ "index.html" ] }
 
 
