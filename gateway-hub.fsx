@@ -58,9 +58,9 @@ module GatewayBase =
           root = "_shared"
           assets =
             [ "_layouts/"
-              "_layouts/default.html"
-              "_layouts/post.html"
-              "_layouts/index.html"
+              //"_layouts/default.html"
+              //"_layouts/post.html"
+              //"_layouts/index.html"
               "_posts/"
               "_posts/2015-11-15-initial.md"
               "blog/"
@@ -244,6 +244,7 @@ module ContentCurator =
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
     let repository (g:site) = pathto g ""
     let gatewaypath gateway name = relpath
+    let reset (g:site) = Git.Reset.ResetHard (repository g)
     let stagencommit repo message =
         Git.Staging.StageAll(repo)
         Git.Commit.Commit repo message
@@ -260,7 +261,9 @@ module ContentCurator =
     module private StructuralValidation =
 
         let ensureDirectory path = Directory.CreateDirectory(path) |> ignore
-        let safeCopy from to' = if not (File.Exists(to')) then File.Copy(from, to')
+        let safeCopy from to' force = 
+            if (force || not (File.Exists(to'))) then 
+                File.Copy(from, to', force)
         let sharedroot = relpath shared.root
         let designs = Gateways.sites |> List.groupBy (fun g -> g.Design)
 
@@ -269,34 +272,30 @@ module ContentCurator =
             for design, gateways in designs do
                 let designFolder = root + design.ToLower() + "/"
                 ensureDirectory (designFolder)
-                safeCopy (root + "default.html") (designFolder + "default.html")
-                safeCopy (root + "post.html") (designFolder + "post.html")
+                safeCopy (root + "default.html") (designFolder + "default.html") false
+                safeCopy (root + "post.html") (designFolder + "post.html") false
 
         let pass source target section =
             let correctedText = File.ReadAllText(source).Replace(@"{%% site.section %%}", section )
             File.WriteAllText(target, correctedText)
 
-        let ensureSections () =
+        let ensureSections (force:bool) =
             for site in Gateways.sites do
+                let layoutroot = sharedroot + "/_layouts/"
                 let root = relpath (site.Title.ToLower()) + "/"
-                for section in site.Sections do
+                let design = site.Design.ToLower()
+                //printf "==] %s  from: %s \r\n                 to: %s\r\n\rn"  site.Title (layoutroot + design + "/default.html") (root + "default.html") 
+                safeCopy (layoutroot + design + "/default.html") (root + "_layouts/default.html") force
+                safeCopy (layoutroot + design + "/post.html") (root + "_layouts/post.html") force
 
+                for section in site.Sections do
                     let sectionPage = root + section.ToLower() + ".md"
                     if not (File.Exists(sectionPage)) then
                         pass (sharedroot + @"/section/section.md") sectionPage section
 
-//                    let sectionpath = root + section.ToLower() + "/"
-//                    ensureDirectory (sectionpath)
-//                    //ensureDirectory (sectionpath + "_posts/")
-//
-//                    let sectionIndex = sectionpath +  "index.html"
-//                    if not (File.Exists(sectionIndex)) then
-//                        pass (sharedroot + @"/section/index.html") sectionIndex section
-
-                        //https://github.com/raphinou/jekyll-base/blob/gh-pages/_layouts/index.html
-    let ensureDesigns () =
+    let ensureDesigns (force:bool) =
         StructuralValidation.ensureLayouts ()
-        StructuralValidation.ensureSections ()
+        StructuralValidation.ensureSections (force)
 
 
     module internal Asset =
@@ -330,15 +329,17 @@ module ContentCurator =
 
 
     let populate () =
-        ensureDesigns ()
+        ensureDesigns (false)
         gateways |> List.map populateSite
 
     let commitAll  () = gateways |> List.map commit
     let publishAll () = gateways |> List.map publish
+    let resetAll () = gateways |> List.map reset
 
 
-
-ContentCurator.ensureDesigns ()
+//ContentCurator.resetAll ()
+    
+ContentCurator.ensureDesigns (true)
 ContentCurator.commitAll ()
 ContentCurator.populate ()
 ContentCurator.publishAll ()
