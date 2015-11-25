@@ -254,16 +254,10 @@ module ContentCurator =
     let publish (g:site) =
         let repo = g |> repository
         stagenpush repo
-        printf "updated %s\r\n, repo in %s\r\n" g.root repo
-
     let passLayout from to' root = 
-        printf "passing from: %s to: %s root: %s\r\n" from to' root
-        
         let correctedText = File.ReadAllText(from).Replace(@"{%% gateway.name %%}", root)
         File.WriteAllText(to', correctedText)
     let passSection source target section =
-        printf "sectPassing from: %s to: %s root: %s\r\n" source target section
-
         let correctedText = File.ReadAllText(source).Replace(@"{%% site.section %%}", section )
         File.WriteAllText(target, correctedText)
 
@@ -293,7 +287,6 @@ module ContentCurator =
                 let layoutroot = sharedroot + "/_layouts/"
                 let root = relpath (site.Title.ToLower()) + "/"
                 let design = site.Design.ToLower()
-                //printf "==] %s  from: %s \r\n                 to: %s\r\n\rn"  site.Title (layoutroot + design + "/default.html") (root + "default.html") 
                 passLayout (layoutroot + design + "/default.html") (root + "_layouts/default.html") site.Title 
                 passLayout (layoutroot + design + "/post.html") (root + "_layouts/post.html") site.Title
 
