@@ -244,7 +244,6 @@ module ContentCurator =
     let pathto (source:'a when 'a :> IHaveAPath) asset = relpath source.path + "/" + asset
     let repository (g:site) = pathto g ""
     let gatewaypath gateway name = relpath
-    let reset (g:site) = Git.Reset.ResetHard (repository g)
     let stagencommit repo message =
         Git.Staging.StageAll(repo)
         Git.Commit.Commit repo message
@@ -257,6 +256,19 @@ module ContentCurator =
         stagenpush repo
         printf "updated %s\r\n, repo in %s\r\n" g.root repo
 
+    let passLayout from to' root = 
+        printf "passing from: %s to: %s root: %s\r\n" from to' root
+        
+        let correctedText = File.ReadAllText(from).Replace(@"{%% gateway.name %%}", root)
+        File.WriteAllText(to', correctedText)
+    let passSection source target section =
+        printf "sectPassing from: %s to: %s root: %s\r\n" source target section
+
+        let correctedText = File.ReadAllText(source).Replace(@"{%% site.section %%}", section )
+        File.WriteAllText(target, correctedText)
+
+
+    let pass (g:site) (ass:FilePath) = passLayout (pathto shared ass) (pathto g ass) g.root
 
     module private StructuralValidation =
 
@@ -275,9 +287,6 @@ module ContentCurator =
                 safeCopy (root + "default.html") (designFolder + "default.html") false
                 safeCopy (root + "post.html") (designFolder + "post.html") false
 
-        let pass source target section =
-            let correctedText = File.ReadAllText(source).Replace(@"{%% site.section %%}", section )
-            File.WriteAllText(target, correctedText)
 
         let ensureSections (force:bool) =
             for site in Gateways.sites do
@@ -285,13 +294,13 @@ module ContentCurator =
                 let root = relpath (site.Title.ToLower()) + "/"
                 let design = site.Design.ToLower()
                 //printf "==] %s  from: %s \r\n                 to: %s\r\n\rn"  site.Title (layoutroot + design + "/default.html") (root + "default.html") 
-                safeCopy (layoutroot + design + "/default.html") (root + "_layouts/default.html") force
-                safeCopy (layoutroot + design + "/post.html") (root + "_layouts/post.html") force
+                passLayout (layoutroot + design + "/default.html") (root + "_layouts/default.html") site.Title 
+                passLayout (layoutroot + design + "/post.html") (root + "_layouts/post.html") site.Title
 
                 for section in site.Sections do
                     let sectionPage = root + section.ToLower() + ".md"
                     if not (File.Exists(sectionPage)) then
-                        pass (sharedroot + @"/section/section.md") sectionPage section
+                        passSection (sharedroot + @"/section/section.md") sectionPage section
 
     let ensureDesigns (force:bool) =
         StructuralValidation.ensureLayouts ()
@@ -303,9 +312,7 @@ module ContentCurator =
         let ensure (g:site, ass:FilePath) =
             let cname g ass = File.WriteAllLines((pathto g ass), [ g.root + ".no" ])
             let mkdir g ass = Directory.CreateDirectory(pathto g ass) |> ignore
-            let pass  g ass =
-                let correctedText = File.ReadAllText(pathto shared ass).Replace(@"{%% gateway.name %%}", g.root)
-                File.WriteAllText((pathto g ass), correctedText)
+
 
             let (|Cname|_|) (g, ass) = check (ass = "CNAME")
             let (|IsDir|_|) (g, ass) = check ((ass:FilePath).EndsWith("/"))
@@ -334,10 +341,7 @@ module ContentCurator =
 
     let commitAll  () = gateways |> List.map commit
     let publishAll () = gateways |> List.map publish
-    let resetAll () = gateways |> List.map reset
 
-
-//ContentCurator.resetAll ()
     
 ContentCurator.ensureDesigns (true)
 ContentCurator.commitAll ()
