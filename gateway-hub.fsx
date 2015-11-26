@@ -65,6 +65,8 @@ module GatewayBase =
               "_posts/2015-11-15-initial.md"
               "blog/"
               "blog/index.html"
+              "images/"
+              "images/bg.gif"
               "stylesheets/"
               "stylesheets/site_cat.css"
               "stylesheets/site_dir.css"
@@ -308,15 +310,18 @@ module ContentCurator =
         let ensure (g:site, ass:FilePath) =
             let cname g ass = File.WriteAllLines((pathto g ass), [ g.root + ".no" ])
             let mkdir g ass = Directory.CreateDirectory(pathto g ass) |> ignore
+            let copy g ass = File.Copy((pathto shared ass), (pathto g ass))
 
 
-            let (|Cname|_|) (g, ass) = check (ass = "CNAME")
-            let (|IsDir|_|) (g, ass) = check ((ass:FilePath).EndsWith("/"))
+            let (|Cname|_|)   (g, ass) = check (ass = "CNAME")
+            let (|IsDir|_|)   (g, ass) = check ((ass:FilePath).EndsWith("/"))
+            let (|IsImage|_|) (g, ass) = check ((ass:FilePath).EndsWith(".gif") || (ass:FilePath).EndsWith(".jpg"))
 
             match g, ass with
-            | Cname -> cname g ass
-            | IsDir -> mkdir g ass
-            | _ ->     pass  g ass
+            | Cname   -> cname g ass
+            | IsDir   -> mkdir g ass
+            | IsImage -> copy g ass
+            | _       -> pass  g ass
 
         let delete (g:site, antiass:FilePath) = File.Delete(pathto g antiass)
 
