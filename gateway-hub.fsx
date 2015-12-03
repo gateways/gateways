@@ -310,7 +310,7 @@ module ContentCurator =
         let ensure (g:site, ass:FilePath) =
             let cname g ass = File.WriteAllLines((pathto g ass), [ g.root + ".no" ])
             let mkdir g ass = Directory.CreateDirectory(pathto g ass) |> ignore
-            let copy g ass = File.Copy((pathto shared ass), (pathto g ass))
+            let copy g ass = File.Copy((pathto shared ass), (pathto g ass), true)
 
 
             let (|Cname|_|)   (g, ass) = check (ass = "CNAME")
