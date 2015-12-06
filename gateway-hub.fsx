@@ -124,13 +124,13 @@ module Gateways =
             { EmptyGateway with
                 Title = "forforskning"
                 Sections = [ "Directory"; "Resources"; ]
-                Design = "catalogue" }
+                Design = "project" }
 
         let forresearch =
             { EmptyGateway with
                 Title = "forresearch"
                 Sections = [ "Katalog"; "Ressurs"; ]
-                Design = "catalogue" }
+                Design = "project" }
 
         let Helseregistre =
             { EmptyGateway with
