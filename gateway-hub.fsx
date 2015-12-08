@@ -320,7 +320,7 @@ module ContentCurator =
             match g, ass with
             | Cname   -> cname g ass
             | IsDir   -> mkdir g ass
-            | IsImage -> copy g ass
+            | IsImage -> copy  g ass
             | _       -> pass  g ass
 
         let delete (g:site, antiass:FilePath) = File.Delete(pathto g antiass)
